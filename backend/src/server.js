@@ -70,9 +70,15 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found', path: req.path });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n  VoidMail Backend running on http://localhost:${PORT}`);
-  console.log(`  Google Project: ${process.env.GOOGLE_PROJECT_ID}`);
-  console.log(`  Helix-o1 AI: Gemini 2.0 Flash`);
-  console.log(`  Environment: ${process.env.NODE_ENV}\n`);
-});
+// Only listen when running locally (not on Vercel)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`\n  VoidMail Backend running on http://localhost:${PORT}`);
+    console.log(`  Google Project: ${process.env.GOOGLE_PROJECT_ID}`);
+    console.log(`  Helix-o1 AI: Gemini 2.0 Flash`);
+    console.log(`  Environment: ${process.env.NODE_ENV}\n`);
+  });
+}
+
+// Export for Vercel serverless
+module.exports = app;
