@@ -2,10 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-const authRoutes = require('./routes/auth');
-const gmailRoutes = require('./routes/gmail');
-const calendarRoutes = require('./routes/calendar');
-const helixRoutes = require('./routes/helix');
+const authRoutes = require('../routes/auth');
+const gmailRoutes = require('../routes/gmail');
+const calendarRoutes = require('../routes/calendar');
+const helixRoutes = require('../routes/helix');
 
 const app = express();
 
