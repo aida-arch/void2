@@ -1,5 +1,9 @@
 const { google } = require('googleapis');
 
+/**
+ * Auth middleware — validates Bearer token by checking with Google
+ * and attaches oauth2Client to the request for downstream use.
+ */
 async function requireAuth(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -17,6 +21,7 @@ async function requireAuth(req, res, next) {
 
     oauth2Client.setCredentials({ access_token: accessToken });
 
+    // Verify token is valid by getting user info
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: userInfo } = await oauth2.userinfo.get();
 
@@ -38,6 +43,9 @@ async function requireAuth(req, res, next) {
   }
 }
 
+/**
+ * Optional auth — sets user info if token is present, but doesn't block
+ */
 async function optionalAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

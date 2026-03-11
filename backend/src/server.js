@@ -2,12 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-const authRoutes = require('../routes/auth');
-const gmailRoutes = require('../routes/gmail');
-const calendarRoutes = require('../routes/calendar');
-const helixRoutes = require('../routes/helix');
+const authRoutes = require('./routes/auth');
+const gmailRoutes = require('./routes/gmail');
+const calendarRoutes = require('./routes/calendar');
+const helixRoutes = require('./routes/helix');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -69,5 +70,9 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found', path: req.path });
 });
 
-// Export for Vercel serverless
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`\n  VoidMail Backend running on http://localhost:${PORT}`);
+  console.log(`  Google Project: ${process.env.GOOGLE_PROJECT_ID}`);
+  console.log(`  Helix-o1 AI: Gemini 2.0 Flash`);
+  console.log(`  Environment: ${process.env.NODE_ENV}\n`);
+});

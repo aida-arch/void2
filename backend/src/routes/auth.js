@@ -20,6 +20,10 @@ const SCOPES = [
   'https://www.googleapis.com/auth/userinfo.profile'
 ];
 
+/**
+ * GET /auth/google
+ * Returns the Google OAuth consent URL for the iOS app to open.
+ */
 router.get('/google', (req, res) => {
   const redirectUri = req.query.redirect_uri || process.env.GOOGLE_REDIRECT_URI;
   const oauth2Client = createOAuth2Client(redirectUri);
@@ -34,9 +38,15 @@ router.get('/google', (req, res) => {
   res.json({ authUrl, scopes: SCOPES });
 });
 
+/**
+ * GET /auth/google/callback
+ * Handles the OAuth callback — exchanges code for tokens,
+ * then redirects to the iOS app's custom URL scheme with the data.
+ */
 router.get('/google/callback', async (req, res) => {
   const { code, error: oauthError } = req.query;
 
+  // iOS custom URL scheme for redirect — uses the iOS client ID, not the web client ID
   const iosScheme = process.env.IOS_REDIRECT_URI
     ? process.env.IOS_REDIRECT_URI.split('://')[0]
     : 'com.googleusercontent.apps.' + process.env.GOOGLE_CLIENT_ID.split('.')[0];
@@ -56,9 +66,11 @@ router.get('/google/callback', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
+    // Get user profile
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: userInfo } = await oauth2.userinfo.get();
 
+    // Build redirect URL with all data as query params
     const params = new URLSearchParams({
       access_token: tokens.access_token || '',
       refresh_token: tokens.refresh_token || '',
@@ -70,7 +82,7 @@ router.get('/google/callback', async (req, res) => {
     });
 
     const redirectURL = `${iosScheme}://oauth2callback?${params.toString()}`;
-    console.log(`[Auth Callback] Redirecting to app for ${userInfo.email}`);
+    console.log(`[Auth Callback] Redirecting to iOS app for ${userInfo.email}`);
     res.redirect(redirectURL);
   } catch (error) {
     console.error('[Auth Callback Error]', error.message);
@@ -79,6 +91,11 @@ router.get('/google/callback', async (req, res) => {
   }
 });
 
+/**
+ * POST /auth/google/token
+ * Exchange authorization code for tokens (for iOS app flow).
+ * Body: { code, redirect_uri }
+ */
 router.post('/google/token', async (req, res) => {
   const { code, redirect_uri } = req.body;
 
@@ -91,6 +108,7 @@ router.post('/google/token', async (req, res) => {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
+    // Get user profile
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: userInfo } = await oauth2.userinfo.get();
 
@@ -115,6 +133,11 @@ router.post('/google/token', async (req, res) => {
   }
 });
 
+/**
+ * POST /auth/google/refresh
+ * Refresh an expired access token.
+ * Body: { refresh_token }
+ */
 router.post('/google/refresh', async (req, res) => {
   const { refresh_token } = req.body;
 
@@ -140,6 +163,10 @@ router.post('/google/refresh', async (req, res) => {
   }
 });
 
+/**
+ * GET /auth/me
+ * Returns the current user's profile.
+ */
 router.get('/me', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -168,6 +195,10 @@ router.get('/me', async (req, res) => {
   }
 });
 
+/**
+ * POST /auth/revoke
+ * Revoke an access token (sign out).
+ */
 router.post('/revoke', async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
