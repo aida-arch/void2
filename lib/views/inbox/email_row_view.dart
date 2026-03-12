@@ -211,6 +211,7 @@ class _EmailRowViewState extends State<EmailRowView>
 
   Widget _buildAvatar() {
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         InitialsAvatar(
           name: widget.email.from.displayName,
@@ -225,7 +226,7 @@ class _EmailRowViewState extends State<EmailRowView>
             width: 3,
             decoration: BoxDecoration(
               color: widget.email.isRead
-                  ? VoidColors.accentPink
+                  ? VoidColors.accentSkyBlue
                   : VoidColors.accentYellow,
               borderRadius: BorderRadius.circular(2),
             ),

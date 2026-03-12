@@ -242,6 +242,39 @@ router.delete('/messages/:id', async (req, res) => {
 });
 
 /**
+ * GET /api/gmail/messages/:messageId/attachments/:attachmentId
+ * Download an attachment by message ID and attachment ID.
+ */
+router.get('/messages/:messageId/attachments/:attachmentId', async (req, res) => {
+  try {
+    const gmail = google.gmail({ version: 'v1', auth: req.oauth2Client });
+    const { messageId, attachmentId } = req.params;
+
+    const response = await gmail.users.messages.attachments.get({
+      userId: 'me',
+      messageId,
+      id: attachmentId,
+    });
+
+    const base64Data = response.data.data;
+    if (!base64Data) {
+      return res.status(404).json({ error: 'Attachment data not found' });
+    }
+
+    // Gmail uses URL-safe base64 — convert to standard base64 then to buffer
+    const standardBase64 = base64Data.replace(/-/g, '+').replace(/_/g, '/');
+    const buffer = Buffer.from(standardBase64, 'base64');
+
+    res.set('Content-Type', 'application/octet-stream');
+    res.set('Content-Length', buffer.length);
+    res.send(buffer);
+  } catch (error) {
+    console.error('[Gmail Attachment Error]', error.message);
+    res.status(500).json({ error: 'Failed to download attachment', details: error.message });
+  }
+});
+
+/**
  * GET /api/gmail/labels
  * List all Gmail labels.
  */
@@ -290,7 +323,7 @@ function parseGmailMessage(msg) {
 
   const labels = msg.labelIds || [];
   const body = extractBody(msg.payload);
-  const attachments = extractAttachments(msg.payload);
+  const attachments = extractAttachments(msg.payload, msg.id);
 
   return {
     id: msg.id,
@@ -344,7 +377,7 @@ function extractBody(payload) {
   return '';
 }
 
-function extractAttachments(payload) {
+function extractAttachments(payload, messageId) {
   const attachments = [];
 
   function walkParts(parts) {
@@ -353,6 +386,8 @@ function extractAttachments(payload) {
       if (part.filename && part.filename.length > 0) {
         attachments.push({
           id: part.body?.attachmentId || '',
+          attachmentId: part.body?.attachmentId || null,
+          messageId: messageId || null,
           name: part.filename,
           mimeType: part.mimeType,
           size: part.body?.size || 0
