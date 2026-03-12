@@ -5,9 +5,9 @@ import 'colors.dart';
 class Typo {
   Typo._();
 
-  // Display - 66pt heavy
+  // Display - 64pt heavy
   static TextStyle display = const TextStyle(
-    fontSize: 66,
+    fontSize: 64,
     fontWeight: FontWeight.w900,
     color: VoidColors.textPrimary,
     letterSpacing: -2,

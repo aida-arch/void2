@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../design_system/colors.dart';
@@ -44,7 +45,7 @@ class _ContentViewState extends State<ContentView> {
               child: _buildTabContent(),
             ),
 
-            // Bottom nav bar + FAB
+            // Bottom nav bar + FAB (Telegram-style frosted glass)
             Positioned(
               left: 0,
               right: 0,
@@ -52,9 +53,28 @@ class _ContentViewState extends State<ContentView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  BottomNavBar(
-                    selectedIndex: _selectedTab,
-                    onTap: (index) => setState(() => _selectedTab = index),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (int i = 0; i < 4; i++)
+                              _buildNavItem(i),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                   if (_selectedTab == 0) ...[
                     const SizedBox(width: 8),
@@ -87,6 +107,42 @@ class _ContentViewState extends State<ContentView> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  static const _navIcons = [
+    [Icons.inbox_outlined, Icons.inbox],
+    [Icons.calendar_today_outlined, Icons.calendar_today],
+    [Icons.search_outlined, Icons.search],
+    [Icons.settings_outlined, Icons.settings],
+  ];
+
+  Widget _buildNavItem(int index) {
+    final isSelected = index == _selectedTab;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTab = index),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 25 : 10,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          isSelected ? _navIcons[index][1] : _navIcons[index][0],
+          color: isSelected
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.4),
+          size: 20,
         ),
       ),
     );

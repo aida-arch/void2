@@ -178,11 +178,12 @@ class _OnboardingViewState extends State<OnboardingView>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     final auth = context.watch<AuthService>();
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: VoidColors.bgDeep,
+      backgroundColor: c.bgDeep,
       body: Stack(
         children: [
           // Layer 1 — Animated circuit grid
@@ -194,7 +195,10 @@ class _OnboardingViewState extends State<OnboardingView>
               builder: (context, child) {
                 return CustomPaint(
                   size: screenSize,
-                  painter: _CircuitGridPainter(phase: _gridController.value),
+                  painter: _CircuitGridPainter(
+                    phase: _gridController.value,
+                    borderColor: c.border,
+                  ),
                 );
               },
             ),
@@ -360,7 +364,7 @@ class _OnboardingViewState extends State<OnboardingView>
                               'YOUR EMAILS NEVER LEAVE YOUR DEVICE.',
                               style: Typo.mono.copyWith(
                                 fontSize: 11,
-                                color: VoidColors.textTertiary,
+                                color: c.textTertiary,
                                 letterSpacing: 1,
                               ),
                             ),
@@ -371,7 +375,7 @@ class _OnboardingViewState extends State<OnboardingView>
                           'END-TO-END LOCAL PROCESSING',
                           style: Typo.mono.copyWith(
                             fontSize: 11,
-                            color: VoidColors.textTertiary.withValues(alpha: 0.4),
+                            color: c.textTertiary.withValues(alpha: 0.4),
                             letterSpacing: 1.5,
                           ),
                         ),
@@ -389,6 +393,7 @@ class _OnboardingViewState extends State<OnboardingView>
 
   /// Title block with glitch typewriter + subtitle + system tag
   Widget _buildTitleBlock() {
+    final c = context.voidColors;
     return Column(
       children: [
         // Glitch typewriter title
@@ -435,7 +440,7 @@ class _OnboardingViewState extends State<OnboardingView>
                       style: Typo.display.copyWith(
                         fontSize: 80,
                         letterSpacing: -3,
-                        color: VoidColors.textPrimary,
+                        color: c.textPrimary,
                       ),
                     ),
                     // Blinking cursor
@@ -485,7 +490,7 @@ class _OnboardingViewState extends State<OnboardingView>
                     Text(
                       'MAIL, SIMPLIFIED.',
                       style: Typo.mono.copyWith(
-                        color: VoidColors.textTertiary,
+                        color: c.textTertiary,
                         letterSpacing: 3,
                       ),
                     ),
@@ -515,7 +520,7 @@ class _OnboardingViewState extends State<OnboardingView>
           child: Text(
             'SYS.BUILD // v1.0',
             style: Typo.mono.copyWith(
-              color: VoidColors.textTertiary.withValues(alpha: 0.4),
+              color: c.textTertiary.withValues(alpha: 0.4),
               letterSpacing: 2,
             ),
           ),
@@ -526,6 +531,7 @@ class _OnboardingViewState extends State<OnboardingView>
 
   /// Orbiting geometric glyphs with center envelope
   Widget _buildOrbitingGlyphs(Size screenSize) {
+    final c = context.voidColors;
     final cx = screenSize.width / 2;
     final cy = screenSize.height * 0.28;
 
@@ -546,7 +552,7 @@ class _OnboardingViewState extends State<OnboardingView>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: VoidColors.border.withValues(alpha: 0.2),
+                    color: c.border.withValues(alpha: 0.2),
                     width: 0.5,
                   ),
                 ),
@@ -634,7 +640,7 @@ class _OnboardingViewState extends State<OnboardingView>
                     child: Icon(
                       Icons.mail,
                       size: 26,
-                      color: VoidColors.textPrimary.withValues(alpha: 0.8),
+                      color: c.textPrimary.withValues(alpha: 0.8),
                     ),
                   );
                 },
@@ -654,6 +660,7 @@ class _OnboardingViewState extends State<OnboardingView>
     required bool isVisible,
     required int index,
   }) {
+    final c = context.voidColors;
     return AnimatedOpacity(
       opacity: isVisible ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 600),
@@ -683,7 +690,7 @@ class _OnboardingViewState extends State<OnboardingView>
                 child: Text(
                   text,
                   style: Typo.mono.copyWith(
-                    color: VoidColors.textSecondary,
+                    color: c.textSecondary,
                     letterSpacing: 1,
                   ),
                 ),
@@ -697,6 +704,7 @@ class _OnboardingViewState extends State<OnboardingView>
 
   /// Sign in button — dark card, gradient border, pulsing glow
   Widget _buildSignInButton(AuthService auth) {
+    final c = context.voidColors;
     return AnimatedOpacity(
       opacity: _showButton ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 700),
@@ -743,7 +751,7 @@ class _OnboardingViewState extends State<OnboardingView>
                         width: double.infinity,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: VoidColors.bgCard,
+                          color: c.bgCard,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: VoidColors.accentGreen.withValues(alpha: 0.8),
@@ -776,7 +784,7 @@ class _OnboardingViewState extends State<OnboardingView>
                             Text(
                               'SIGN IN WITH GOOGLE',
                               style: Typo.headline.copyWith(
-                                color: VoidColors.textPrimary,
+                                color: c.textPrimary,
                                 letterSpacing: 1,
                               ),
                             ),
@@ -874,8 +882,9 @@ class _FeatureIconState extends State<_FeatureIcon>
 /// Circuit Grid Painter — sparse nodes, proper opacity levels
 class _CircuitGridPainter extends CustomPainter {
   final double phase;
+  final Color borderColor;
 
-  _CircuitGridPainter({required this.phase});
+  _CircuitGridPainter({required this.phase, required this.borderColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -886,7 +895,7 @@ class _CircuitGridPainter extends CustomPainter {
 
     // Vertical lines — opacity 0.25
     final vPaint = Paint()
-      ..color = VoidColors.border.withValues(alpha: 0.25)
+      ..color = borderColor.withValues(alpha: 0.25)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
@@ -897,7 +906,7 @@ class _CircuitGridPainter extends CustomPainter {
 
     // Horizontal lines with scroll — opacity 0.15
     final hPaint = Paint()
-      ..color = VoidColors.border.withValues(alpha: 0.15)
+      ..color = borderColor.withValues(alpha: 0.15)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
@@ -934,5 +943,5 @@ class _CircuitGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CircuitGridPainter oldDelegate) =>
-      oldDelegate.phase != phase;
+      oldDelegate.phase != phase || oldDelegate.borderColor != borderColor;
 }

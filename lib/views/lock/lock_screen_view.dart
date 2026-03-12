@@ -140,8 +140,9 @@ class _LockScreenViewState extends State<LockScreenView>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Scaffold(
-      backgroundColor: VoidColors.bgDeep,
+      backgroundColor: c.bgDeep,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -156,20 +157,20 @@ class _LockScreenViewState extends State<LockScreenView>
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    color: VoidColors.bgSurface,
+                    color: c.bgSurface,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: _isError
-                          ? VoidColors.error.withValues(alpha: 0.5)
-                          : VoidColors.border,
+                          ? c.error.withValues(alpha: 0.5)
+                          : c.border,
                       width: 1,
                     ),
                   ),
                   child: Icon(
                     _isError ? Icons.lock_outline : Icons.lock_outline,
                     color: _isError
-                        ? VoidColors.error
-                        : VoidColors.textPrimary,
+                        ? c.error
+                        : c.textPrimary,
                     size: 32,
                   ),
                 ),
@@ -182,7 +183,7 @@ class _LockScreenViewState extends State<LockScreenView>
                   style: Typo.metaLabel.copyWith(
                     fontSize: 14,
                     letterSpacing: 6,
-                    color: VoidColors.textTertiary,
+                    color: c.textTertiary,
                   ),
                 ),
 
@@ -191,7 +192,7 @@ class _LockScreenViewState extends State<LockScreenView>
                 Text(
                   'Enter PIN',
                   style: Typo.headline.copyWith(
-                    color: VoidColors.textSecondary,
+                    color: c.textSecondary,
                   ),
                 ),
 
@@ -229,16 +230,16 @@ class _LockScreenViewState extends State<LockScreenView>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: _isError
-                              ? VoidColors.error
+                              ? c.error
                               : isFilled
-                                  ? VoidColors.textPrimary
+                                  ? c.textPrimary
                                   : Colors.transparent,
                           border: Border.all(
                             color: _isError
-                                ? VoidColors.error
+                                ? c.error
                                 : isFilled
-                                    ? VoidColors.textPrimary
-                                    : VoidColors.border,
+                                    ? c.textPrimary
+                                    : c.border,
                             width: 2,
                           ),
                         ),
@@ -255,7 +256,7 @@ class _LockScreenViewState extends State<LockScreenView>
                   child: Text(
                     'Incorrect PIN',
                     style: Typo.caption.copyWith(
-                      color: VoidColors.error,
+                      color: c.error,
                       fontSize: 13,
                     ),
                   ),
@@ -365,6 +366,7 @@ class _PinButtonState extends State<_PinButton> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -379,12 +381,12 @@ class _PinButtonState extends State<_PinButton> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: _isPressed
-              ? VoidColors.bgCardHover
-              : VoidColors.bgSurface,
+              ? c.bgCardHover
+              : c.bgSurface,
           border: Border.all(
             color: _isPressed
-                ? VoidColors.borderHighlight
-                : VoidColors.border,
+                ? c.borderHighlight
+                : c.border,
             width: 1,
           ),
         ),
@@ -392,16 +394,16 @@ class _PinButtonState extends State<_PinButton> {
           child: widget.label != null
               ? Text(
                   widget.label!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w300,
-                    color: VoidColors.textPrimary,
+                    color: c.textPrimary,
                     letterSpacing: 0,
                   ),
                 )
               : Icon(
                   widget.icon,
-                  color: VoidColors.textSecondary,
+                  color: c.textSecondary,
                   size: widget.isSmallIcon ? 22 : 28,
                 ),
         ),

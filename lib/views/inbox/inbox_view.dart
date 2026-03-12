@@ -388,15 +388,14 @@ class _InboxViewState extends State<InboxView> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
                           child: Container(
                             width: 240,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1C1C1E)
-                                  .withValues(alpha: 0.78),
+                              color: Colors.black.withValues(alpha: 0.35),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: Colors.white.withValues(alpha: 0.08),
                                 width: 0.5,
                               ),
                             ),
@@ -543,15 +542,14 @@ class _InboxViewState extends State<InboxView> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
                           child: Container(
                             width: 280,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1C1C1E)
-                                  .withValues(alpha: 0.78),
+                              color: Colors.black.withValues(alpha: 0.35),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: Colors.white.withValues(alpha: 0.08),
                                 width: 0.5,
                               ),
                             ),

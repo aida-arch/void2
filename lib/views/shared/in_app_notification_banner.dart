@@ -36,6 +36,7 @@ class InAppNotificationBanner extends StatelessWidget {
   }
 
   Widget _buildBanner(BuildContext context, NotificationData notification) {
+    final c = context.voidColors;
     return GestureDetector(
       onTap: () {
         onTap?.call(notification.emailId);
@@ -44,7 +45,7 @@ class InAppNotificationBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: VoidColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -62,7 +63,7 @@ class InAppNotificationBanner extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: VoidColors.bgDeep,
+                color: c.bgDeep,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -102,7 +103,7 @@ class InAppNotificationBanner extends StatelessWidget {
                     notification.subject,
                     style: Typo.subhead.copyWith(
                       fontSize: 13,
-                      color: VoidColors.textSecondary,
+                      color: c.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -113,7 +114,7 @@ class InAppNotificationBanner extends StatelessWidget {
                     notification.snippet,
                     style: Typo.subhead.copyWith(
                       fontSize: 13,
-                      color: VoidColors.textTertiary,
+                      color: c.textTertiary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -129,13 +130,13 @@ class InAppNotificationBanner extends StatelessWidget {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: VoidColors.bgDeep,
+                  color: c.bgDeep,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.close,
                   size: 12,
-                  color: VoidColors.textTertiary,
+                  color: c.textTertiary,
                 ),
               ),
             ),

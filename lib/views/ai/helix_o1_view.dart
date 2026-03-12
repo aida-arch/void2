@@ -201,6 +201,7 @@ class _HelixO1ViewState extends State<HelixO1View>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     final gmail = context.watch<GmailService>();
     final calendar = context.watch<CalendarService>();
 
@@ -212,7 +213,7 @@ class _HelixO1ViewState extends State<HelixO1View>
         e.startDate.day == now.day).length;
 
     return Scaffold(
-      backgroundColor: VoidColors.bgDeep,
+      backgroundColor: c.bgDeep,
       body: SafeArea(
         child: Column(
           children: [
@@ -273,15 +274,16 @@ class _HelixO1ViewState extends State<HelixO1View>
   }
 
   Widget _buildHeader() {
+    final c = context.voidColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back,
-              color: VoidColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
           const Spacer(),
@@ -334,6 +336,7 @@ class _HelixO1ViewState extends State<HelixO1View>
 
   /// Inbox Zero Progress Bar
   Widget _buildInboxZeroProgress(GmailService gmail) {
+    final c = context.voidColors;
     final total = gmail.emails.length;
     final read = total - gmail.unreadCount;
     final progress = total > 0 ? read / total : 1.0;
@@ -374,7 +377,7 @@ class _HelixO1ViewState extends State<HelixO1View>
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: VoidColors.bgCardHover,
+              backgroundColor: c.bgCardHover,
               valueColor: AlwaysStoppedAnimation<Color>(
                 progress >= 1.0
                     ? VoidColors.accentGreen
@@ -562,6 +565,8 @@ class _HelixO1ViewState extends State<HelixO1View>
                   Text(
                     alert.title,
                     style: Typo.headline.copyWith(fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -582,7 +587,7 @@ class _HelixO1ViewState extends State<HelixO1View>
               child: Text(
                 alert.type.label,
                 style: Typo.caption.copyWith(
-                  fontSize: 13,
+                  fontSize: 10,
                   color: alert.color,
                   fontWeight: FontWeight.w600,
                 ),
@@ -595,6 +600,7 @@ class _HelixO1ViewState extends State<HelixO1View>
   }
 
   Widget _buildChatBubble(_ChatMessage message) {
+    final c = context.voidColors;
     return Align(
       alignment:
           message.isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -606,8 +612,8 @@ class _HelixO1ViewState extends State<HelixO1View>
         ),
         decoration: BoxDecoration(
           color: message.isUser
-              ? VoidColors.textPrimary
-              : VoidColors.bgCard,
+              ? c.textPrimary
+              : c.bgCard,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -620,8 +626,8 @@ class _HelixO1ViewState extends State<HelixO1View>
           style: Typo.body.copyWith(
             fontSize: 15,
             color: message.isUser
-                ? VoidColors.textInverse
-                : VoidColors.textPrimary,
+                ? c.textInverse
+                : c.textPrimary,
           ),
         ),
       ),
@@ -629,13 +635,14 @@ class _HelixO1ViewState extends State<HelixO1View>
   }
 
   Widget _buildTypingIndicator() {
+    final c = context.voidColors;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: VoidColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -664,19 +671,20 @@ class _HelixO1ViewState extends State<HelixO1View>
   }
 
   Widget _buildChatInput() {
+    final c = context.voidColors;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      color: VoidColors.bgDeep,
+      color: c.bgDeep,
       child: Row(
         children: [
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: VoidColors.bgCard,
+                color: c.bgCard,
                 borderRadius: BorderRadius.circular(24),
                 border:
-                    Border.all(color: VoidColors.border, width: 0.5),
+                    Border.all(color: c.border, width: 0.5),
               ),
               child: TextField(
                 controller: _chatController,
@@ -685,7 +693,7 @@ class _HelixO1ViewState extends State<HelixO1View>
                   hintText: 'Ask Helix anything...',
                   hintStyle: Typo.body.copyWith(
                     fontSize: 15,
-                    color: VoidColors.textTertiary,
+                    color: c.textTertiary,
                   ),
                   border: InputBorder.none,
                   contentPadding:
@@ -705,9 +713,9 @@ class _HelixO1ViewState extends State<HelixO1View>
                 color: VoidColors.accentSkyBlue,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_upward,
-                color: VoidColors.textInverse,
+                color: c.textInverse,
                 size: 20,
               ),
             ),

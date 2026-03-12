@@ -26,7 +26,7 @@ class ScreenHeader extends StatelessWidget {
             children: [
               Text(
                 metaLabel.toUpperCase(),
-                style: Typo.metaLabel.copyWith(fontSize: 16),
+                style: Typo.metaLabel,
               ),
               const Spacer(),
               if (trailing != null) ...trailing!,
@@ -58,6 +58,7 @@ class FilterChipBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return SizedBox(
       height: 36,
       child: ListView.separated(
@@ -75,10 +76,10 @@ class FilterChipBar extends StatelessWidget {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
-                color: isActive ? VoidColors.textPrimary : Colors.transparent,
+                color: isActive ? c.textPrimary : Colors.transparent,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: isActive ? VoidColors.textPrimary : VoidColors.border,
+                  color: isActive ? c.textPrimary : c.border,
                   width: 0.5,
                 ),
               ),
@@ -88,8 +89,8 @@ class FilterChipBar extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: isActive
-                      ? VoidColors.textInverse
-                      : VoidColors.textSecondary,
+                      ? c.textInverse
+                      : c.textSecondary,
                 ),
               ),
             ),
@@ -108,6 +109,7 @@ class DateDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
@@ -120,7 +122,7 @@ class DateDivider extends StatelessWidget {
           Expanded(
             child: Container(
               height: 0.5,
-              color: VoidColors.border,
+              color: c.border,
             ),
           ),
         ],
@@ -137,20 +139,20 @@ class SectionDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label.toUpperCase(),
             style: Typo.sectionLabel,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              height: 0.5,
-              color: VoidColors.border,
-            ),
+          const SizedBox(height: 8),
+          Container(
+            height: 0.5,
+            color: c.border,
           ),
         ],
       ),
@@ -175,12 +177,13 @@ class VoidCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: padding ?? const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color ?? VoidColors.bgCard,
+          color: color ?? c.bgCard,
           borderRadius: BorderRadius.circular(8),
         ),
         child: child,
@@ -239,6 +242,7 @@ class _MonochromeFABState extends State<MonochromeFAB>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     if (!_isVisible) return const SizedBox.shrink();
 
     return ScaleTransition(
@@ -270,7 +274,7 @@ class _MonochromeFABState extends State<MonochromeFAB>
             ),
             child: Icon(
               widget.icon,
-              color: VoidColors.bgDeep,
+              color: c.bgDeep,
               size: 20,
             ),
           ),
@@ -281,45 +285,82 @@ class _MonochromeFABState extends State<MonochromeFAB>
 }
 
 /// Bottom Nav Bar - Floating pill navigation with matched geometry
-class BottomNavBar extends StatelessWidget {
+class BottomNavBar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
+  final VoidCallback? onComposeTap;
 
   const BottomNavBar({
     super.key,
     required this.selectedIndex,
     required this.onTap,
+    this.onComposeTap,
   });
 
+  @override
+  State<BottomNavBar> createState() => _BottomNavBarState();
+}
+
+class _BottomNavBarState extends State<BottomNavBar>
+    with SingleTickerProviderStateMixin {
   static const _items = [
-    _NavItem(Icons.mail_outline, Icons.mail, 'Inbox'),
-    _NavItem(Icons.calendar_month_outlined, Icons.calendar_month, 'Calendar'),
+    _NavItem(Icons.inbox_outlined, Icons.inbox, 'Inbox'),
+    _NavItem(Icons.calendar_today_outlined, Icons.calendar_today, 'Calendar'),
     _NavItem(Icons.search_outlined, Icons.search, 'Search'),
     _NavItem(Icons.settings_outlined, Icons.settings, 'Settings'),
   ];
 
+  late AnimationController _composeController;
+  late Animation<double> _composeScale;
+  bool _composePressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _composeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _composeScale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _composeController, curve: Curves.elasticOut),
+    );
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _composeController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _composeController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: VoidColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(32),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: List.generate(_items.length, (index) {
-          return _buildNavItem(index);
-        }),
+        children: [
+          // All 4 nav items
+          for (int index = 0; index < 4; index++)
+            _buildNavItem(context, index),
+        ],
       ),
     );
   }
 
-  Widget _buildNavItem(int index) {
+  Widget _buildNavItem(BuildContext context, int index) {
+    final c = context.voidColors;
     final item = _items[index];
-    final isSelected = index == selectedIndex;
+    final isSelected = index == widget.selectedIndex;
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () => widget.onTap(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -330,7 +371,7 @@ class BottomNavBar extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? VoidColors.textPrimary.withValues(alpha: 0.12)
+              ? c.textPrimary.withValues(alpha: 0.12)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
         ),
@@ -342,8 +383,8 @@ class BottomNavBar extends StatelessWidget {
               isSelected ? item.activeIcon : item.icon,
               key: ValueKey('${item.label}_$isSelected'),
               color: isSelected
-                  ? VoidColors.textPrimary
-                  : VoidColors.textPrimary.withValues(alpha: 0.4),
+                  ? c.textPrimary
+                  : c.textPrimary.withValues(alpha: 0.4),
               size: 20,
             ),
           ),
@@ -384,11 +425,12 @@ class InitialsAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: backgroundColor ?? VoidColors.bgDeep,
+        color: backgroundColor ?? c.bgDeep,
         borderRadius: BorderRadius.circular(size * 0.2),
       ),
       child: Center(
@@ -398,7 +440,7 @@ class InitialsAvatar extends StatelessWidget {
             fontSize: size * 0.35,
             fontWeight: FontWeight.w600,
             fontFamily: 'monospace',
-            color: VoidColors.textPrimary,
+            color: c.textPrimary,
           ),
         ),
       ),
@@ -476,14 +518,15 @@ class ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: VoidColors.textSecondary),
+          Icon(icon, size: 20, color: c.textSecondary),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label, style: Typo.body.copyWith(fontSize: 17)),
+            child: Text(label, style: Typo.body),
           ),
           Switch(
             value: value,
@@ -512,15 +555,16 @@ class TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? VoidColors.textPrimary : VoidColors.bgCard,
+          color: isActive ? c.textPrimary : c.bgCard,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isActive ? VoidColors.textPrimary : VoidColors.border,
+            color: isActive ? c.textPrimary : c.border,
             width: 0.5,
           ),
         ),
@@ -532,8 +576,8 @@ class TagChip extends StatelessWidget {
                 icon,
                 size: 14,
                 color: isActive
-                    ? VoidColors.textInverse
-                    : VoidColors.textSecondary,
+                    ? c.textInverse
+                    : c.textSecondary,
               ),
               const SizedBox(width: 4),
             ],
@@ -543,8 +587,8 @@ class TagChip extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: isActive
-                    ? VoidColors.textInverse
-                    : VoidColors.textSecondary,
+                    ? c.textInverse
+                    : c.textSecondary,
               ),
             ),
           ],
@@ -562,12 +606,13 @@ class QuoteBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Container(
       padding: const EdgeInsets.only(left: 16),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           left: BorderSide(
-            color: VoidColors.border,
+            color: c.border,
             width: 3,
           ),
         ),
@@ -576,7 +621,7 @@ class QuoteBlock extends StatelessWidget {
         text,
         style: Typo.body.copyWith(
           fontStyle: FontStyle.italic,
-          color: VoidColors.textSecondary,
+          color: c.textSecondary,
         ),
       ),
     );
@@ -598,11 +643,12 @@ class EmptyStateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: VoidColors.textTertiary),
+          Icon(icon, size: 48, color: c.textTertiary),
           const SizedBox(height: 16),
           Text(title, style: Typo.headline),
           const SizedBox(height: 8),
@@ -643,30 +689,33 @@ class VoidButton extends StatefulWidget {
 class _VoidButtonState extends State<VoidButton> {
   bool _isPressed = false;
 
-  Color get _bgColor {
+  Color _bgColor(VoidThemeColors c) {
     switch (widget.style) {
       case VoidButtonStyle.primary:
-        return VoidColors.textPrimary;
+        return c.textPrimary;
       case VoidButtonStyle.secondary:
-        return VoidColors.bgCard;
+        return c.bgCard;
       case VoidButtonStyle.ghost:
         return Colors.transparent;
     }
   }
 
-  Color get _textColor {
+  Color _textColor(VoidThemeColors c) {
     switch (widget.style) {
       case VoidButtonStyle.primary:
-        return VoidColors.textInverse;
+        return c.textInverse;
       case VoidButtonStyle.secondary:
-        return VoidColors.textPrimary;
+        return c.textPrimary;
       case VoidButtonStyle.ghost:
-        return VoidColors.textPrimary;
+        return c.textPrimary;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
+    final bg = _bgColor(c);
+    final fg = _textColor(c);
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) {
@@ -680,10 +729,10 @@ class _VoidButtonState extends State<VoidButton> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           decoration: BoxDecoration(
-            color: _bgColor,
+            color: bg,
             borderRadius: BorderRadius.circular(24),
             border: widget.style == VoidButtonStyle.ghost
-                ? Border.all(color: VoidColors.border)
+                ? Border.all(color: c.border)
                 : null,
           ),
           child: Row(
@@ -696,12 +745,12 @@ class _VoidButtonState extends State<VoidButton> {
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: _textColor,
+                    color: fg,
                   ),
                 ),
                 const SizedBox(width: 8),
               ] else if (widget.icon != null) ...[
-                Icon(widget.icon, size: 18, color: _textColor),
+                Icon(widget.icon, size: 18, color: fg),
                 const SizedBox(width: 8),
               ],
               Text(
@@ -709,7 +758,7 @@ class _VoidButtonState extends State<VoidButton> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: _textColor,
+                  color: fg,
                 ),
               ),
             ],
@@ -720,13 +769,17 @@ class _VoidButtonState extends State<VoidButton> {
   }
 }
 
-/// AI Summary Card - Collapsible AI summary (matches reference)
+/// AI Summary Card - Collapsible AI summary
 class AISummaryCard extends StatefulWidget {
   final String? summary;
+  final bool isLoading;
+  final VoidCallback? onGenerate;
 
   const AISummaryCard({
     super.key,
     this.summary,
+    this.isLoading = false,
+    this.onGenerate,
   });
 
   @override
@@ -734,16 +787,13 @@ class AISummaryCard extends StatefulWidget {
 }
 
 class _AISummaryCardState extends State<AISummaryCard> {
-  bool _isExpanded = false;
+  bool _isExpanded = true;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: VoidColors.bgDeep,
-        borderRadius: BorderRadius.circular(8),
-      ),
+    final c = context.voidColors;
+    return VoidCard(
+      color: c.bgSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -764,25 +814,43 @@ class _AISummaryCardState extends State<AISummaryCard> {
                   ),
                 ),
                 const Spacer(),
-                Icon(
-                  _isExpanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: VoidColors.textTertiary,
-                ),
+                if (widget.summary == null && !widget.isLoading)
+                  GestureDetector(
+                    onTap: widget.onGenerate,
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      size: 18,
+                      color: VoidColors.accentSkyBlue,
+                    ),
+                  )
+                else
+                  Icon(
+                    _isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: c.textTertiary,
+                  ),
               ],
             ),
           ),
-          if (_isExpanded && widget.summary != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              widget.summary!,
-              style: Typo.subhead.copyWith(
-                color: VoidColors.textSecondary,
-                height: 1.4,
+          if (_isExpanded) ...[
+            const SizedBox(height: 12),
+            if (widget.isLoading)
+              const ShimmerLine(width: double.infinity, height: 16)
+            else if (widget.summary != null)
+              Text(
+                widget.summary!,
+                style: Typo.subhead,
+              )
+            else
+              Text(
+                'Tap to generate AI summary',
+                style: Typo.subhead.copyWith(
+                  color: c.textTertiary,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
-            ),
           ],
         ],
       ),
@@ -828,6 +896,7 @@ class _ShimmerLineState extends State<ShimmerLine>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.voidColors;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -839,10 +908,10 @@ class _ShimmerLineState extends State<ShimmerLine>
             gradient: LinearGradient(
               begin: Alignment(-1.0 + 2.0 * _controller.value, 0),
               end: Alignment(-0.5 + 2.0 * _controller.value, 0),
-              colors: const [
-                VoidColors.bgCard,
-                VoidColors.bgCardHover,
-                VoidColors.bgCard,
+              colors: [
+                c.bgCard,
+                c.bgCardHover,
+                c.bgCard,
               ],
             ),
           ),

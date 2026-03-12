@@ -1,7 +1,6 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -21,9 +20,6 @@ import 'views/lock/lock_screen_view.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load .env file
-  await dotenv.load(fileName: '.env');
-
   // Initialize timezones for scheduled notifications
   tz.initializeTimeZones();
 
@@ -38,7 +34,7 @@ void main() async {
 
   // Initialize background task manager (Android only)
   if (Platform.isAndroid) {
-    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+    await Workmanager().initialize(callbackDispatcher);
     await Workmanager().registerPeriodicTask(
       'emailCheckTask',
       emailCheckTaskName,
@@ -99,7 +95,7 @@ class ThemeModeNotifier extends ChangeNotifier {
       case 'light':
         return ThemeMode.light;
       case 'system':
-        return ThemeMode.system;
+        return ThemeMode.dark;
       default:
         return ThemeMode.dark;
     }

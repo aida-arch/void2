@@ -68,23 +68,38 @@ class _EmailRowViewState extends State<EmailRowView>
         child: GestureDetector(
           onHorizontalDragStart: (_) => setState(() => _isDragging = true),
           onHorizontalDragUpdate: (details) {
-            setState(() {
-              _dragOffset += details.primaryDelta ?? 0;
-              _dragOffset = _dragOffset.clamp(-80.0, 80.0);
-            });
+            if ((details.primaryDelta ?? 0).abs() >
+                (details.delta.dy).abs()) {
+              setState(() {
+                _dragOffset += details.primaryDelta ?? 0;
+              });
+            }
           },
           onHorizontalDragEnd: (details) {
-            if (_dragOffset > 80) {
-              widget.onSwipeRight();
-            } else if (_dragOffset < -80) {
-              widget.onSwipeLeft();
+            const threshold = 80.0;
+            if (_dragOffset > threshold) {
+              // Swipe right → toggle read
+              Future.delayed(const Duration(milliseconds: 250), () {
+                widget.onSwipeRight();
+              });
+            } else if (_dragOffset < -threshold) {
+              // Swipe left → delete
+              Future.delayed(const Duration(milliseconds: 250), () {
+                widget.onSwipeLeft();
+              });
             }
             setState(() {
               _dragOffset = 0;
               _isDragging = false;
             });
           },
-          onTap: widget.onTap,
+          onTap: () {
+            if (_dragOffset == 0) {
+              widget.onTap();
+            } else {
+              setState(() => _dragOffset = 0);
+            }
+          },
           child: Stack(
             children: [
               // Swipe action backgrounds

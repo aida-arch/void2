@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../design_system/colors.dart';
 import '../../design_system/typography.dart';
 import '../../design_system/components.dart';
@@ -329,16 +330,8 @@ class _EmailDetailViewState extends State<EmailDetailView>
                           ),
                         ),
 
-                      // Email body
-                      Text(
-                        _translatedBody ?? _displayBody,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: VoidColors.textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
+                      // Email body with linkified URLs
+                      _buildBodyText(_translatedBody ?? _displayBody),
 
                       // Attachments
                       if (widget.email.attachments.isNotEmpty) ...[
@@ -364,6 +357,82 @@ class _EmailDetailViewState extends State<EmailDetailView>
         ),
       ),
     );
+  }
+
+  /// Renders email body with URLs collapsed to single-line tappable links
+  Widget _buildBodyText(String text) {
+    final urlRegex = RegExp(r'https?://\S+');
+    final spans = <InlineSpan>[];
+    int lastEnd = 0;
+
+    for (final match in urlRegex.allMatches(text)) {
+      // Text before the URL
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            color: VoidColors.textSecondary,
+            height: 1.4,
+          ),
+        ));
+      }
+
+      // The URL itself — show domain only, tappable
+      final url = match.group(0)!;
+      final uri = Uri.tryParse(url);
+      final displayText = uri?.host ?? url;
+
+      spans.add(WidgetSpan(
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
+        child: GestureDetector(
+          onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+          child: Text(
+            '🔗 $displayText',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 15,
+              color: VoidColors.accentSkyBlue,
+              decoration: TextDecoration.underline,
+              decorationColor: VoidColors.accentSkyBlue,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ));
+
+      lastEnd = match.end;
+    }
+
+    // Remaining text after last URL
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastEnd),
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: VoidColors.textSecondary,
+          height: 1.4,
+        ),
+      ));
+    }
+
+    if (spans.isEmpty) {
+      return Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: VoidColors.textSecondary,
+          height: 1.4,
+        ),
+      );
+    }
+
+    return Text.rich(TextSpan(children: spans));
   }
 
   Widget _buildTopBar() {

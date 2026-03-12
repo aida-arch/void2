@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -885,15 +886,19 @@ class _ComposeViewState extends State<ComposeView>
   Widget _buildToolbar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(8, 10, 8, 70),
-      decoration: const BoxDecoration(
-        color: VoidColors.bgDeep,
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: VoidColors.bgCard,
-          borderRadius: BorderRadius.circular(32),
-        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
         child: Row(
           children: [
             // AI Draft (capsule button)
@@ -985,6 +990,8 @@ class _ComposeViewState extends State<ComposeView>
 
           ],
         ),
+      ),
+      ),
       ),
     );
   }
