@@ -22,14 +22,15 @@ class _SettingsViewState extends State<SettingsView> {
   bool _aiSummaries = true;
   bool _blockTrackers = true;
   bool _readReceipts = false;
+  bool _signatureEnabled = true;
+  String? _editingSignatureAccount;
 
-  // Per-account signatures
   final Map<String, TextEditingController> _signatureControllers = {};
 
   @override
   void dispose() {
-    for (final controller in _signatureControllers.values) {
-      controller.dispose();
+    for (final c in _signatureControllers.values) {
+      c.dispose();
     }
     super.dispose();
   }
@@ -43,197 +44,288 @@ class _SettingsViewState extends State<SettingsView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Screen Header
           ScreenHeader(
             metaLabel: 'VOIDMAIL',
             title: 'SETTINGS',
             trailing: [
-              Text(
-                'BUILD: 1.1',
-                style: Typo.metaLabel,
+              Text('BUILD: 1.1', style: Typo.metaLabel.copyWith(fontSize: 16)),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // ACCOUNTS
+          _systemSection(
+            title: 'ACCOUNTS',
+            children: [
+              ...auth.accounts.map((a) => _buildAccountRow(a, auth)),
+              _buildAddAccountButton(auth),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // PREFERENCES
+          _systemSection(
+            title: 'PREFERENCES',
+            children: [
+              ToggleRow(
+                icon: Icons.notifications_active,
+                label: 'Smart Notifications',
+                value: _smartNotifications,
+                onChanged: (v) => setState(() => _smartNotifications = v),
+              ),
+              const _SectionInlineDivider(),
+              ToggleRow(
+                icon: Icons.auto_awesome,
+                label: 'AI Summaries',
+                value: _aiSummaries,
+                onChanged: (v) => setState(() => _aiSummaries = v),
               ),
             ],
           ),
 
-          // Accounts section
-          const SectionDivider(label: 'ACCOUNTS'),
-          ...auth.accounts.map((account) => _buildAccountRow(account, auth)),
-          _buildAddAccountButton(auth),
+          const SizedBox(height: 24),
 
-          // Preferences
-          const SectionDivider(label: 'PREFERENCES'),
-          ToggleRow(
-            icon: Icons.notifications_active,
-            label: 'Smart Notifications',
-            value: _smartNotifications,
-            onChanged: (v) => setState(() => _smartNotifications = v),
-          ),
-          ToggleRow(
-            icon: Icons.auto_awesome,
-            label: 'AI Summaries',
-            value: _aiSummaries,
-            onChanged: (v) => setState(() => _aiSummaries = v),
+          // EMAIL SIGNATURES
+          _systemSection(
+            title: 'EMAIL SIGNATURES',
+            children: [
+              ToggleRow(
+                icon: Icons.history_edu,
+                label: 'Enable Signatures',
+                value: _signatureEnabled,
+                onChanged: (v) => setState(() => _signatureEnabled = v),
+              ),
+              if (_signatureEnabled)
+                ...auth.accounts.map((a) => _buildSignatureRow(a)),
+            ],
           ),
 
-          // Email Signatures
-          if (auth.accounts.isNotEmpty) ...[
-            const SectionDivider(label: 'EMAIL SIGNATURES'),
-            ...auth.accounts.map((account) => _buildSignatureEditor(account)),
-          ],
+          const SizedBox(height: 24),
 
-          // Privacy & Security
-          const SectionDivider(label: 'PRIVACY & SECURITY'),
-          ToggleRow(
-            icon: Icons.block,
-            label: 'Block Trackers',
-            value: _blockTrackers,
-            onChanged: (v) => setState(() => _blockTrackers = v),
-          ),
-          ToggleRow(
-            icon: Icons.visibility_off,
-            label: 'Read Receipts',
-            value: _readReceipts,
-            onChanged: (v) => setState(() => _readReceipts = v),
-          ),
-          // Encryption settings link
-          _buildNavigationRow(
-            icon: Icons.enhanced_encryption,
-            label: 'Encryption',
-            subtitle: 'End-to-end encryption settings',
-            color: VoidColors.accentGreen,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const EncryptionView()),
-            ),
-          ),
-
-          // Appearance
-          const SectionDivider(label: 'APPEARANCE'),
-          _buildAppearancePicker(),
-
-          // About
-          const SectionDivider(label: 'ABOUT'),
-          _buildAboutSection(),
-          const SizedBox(height: 8),
-          _buildNavigationRow(
-            icon: Icons.info_outline,
-            label: 'About VoidMail',
-            subtitle: 'Version, features, and credits',
-            color: VoidColors.accentSkyBlue,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AboutView()),
-            ),
+          // PRIVACY & SECURITY
+          _systemSection(
+            title: 'PRIVACY & SECURITY',
+            children: [
+              ToggleRow(
+                icon: Icons.shield,
+                label: 'Block Trackers',
+                value: _blockTrackers,
+                onChanged: (v) => setState(() => _blockTrackers = v),
+              ),
+              const _SectionInlineDivider(),
+              ToggleRow(
+                icon: Icons.visibility,
+                label: 'Read Receipts',
+                value: _readReceipts,
+                onChanged: (v) => setState(() => _readReceipts = v),
+              ),
+              const _SectionInlineDivider(),
+              _buildNavRow(
+                icon: Icons.lock,
+                label: 'Encryption',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EncryptionView()),
+                ),
+              ),
+            ],
           ),
 
-          // Sign out
-          if (auth.isSignedIn) ...[
-            const SizedBox(height: 32),
-            _buildSignOutButton(auth),
-          ],
+          const SizedBox(height: 24),
+
+          // APPEARANCE
+          _systemSection(
+            title: 'APPEARANCE',
+            children: [
+              _buildAppearancePicker(),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // ABOUT
+          _systemSection(
+            title: 'ABOUT',
+            children: [
+              _buildNavRow(
+                icon: Icons.info_outline,
+                label: 'About VoidMail',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AboutView()),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // SIGN OUT
+          if (auth.isSignedIn) _buildSignOutButton(auth),
         ],
       ),
     );
   }
 
-  Widget _buildAccountRow(UserAccount account, AuthService auth) {
-    final c = context.voidColors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: VoidCard(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Color indicator
-            Container(
-              width: 8,
-              height: 40,
-              decoration: BoxDecoration(
-                color: account.colorTag.color,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Account info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    account.label,
-                    style: Typo.headline.copyWith(fontSize: 15),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    account.email,
-                    style: Typo.monoSmall,
-                  ),
-                ],
-              ),
-            ),
-
-            // Color picker
-            PopupMenuButton<AccountColor>(
-              icon: Icon(
-                Icons.circle,
-                size: 16,
-                color: account.colorTag.color,
-              ),
-              color: c.bgCard,
-              onSelected: (color) {
-                auth.setAccountColor(account.email, color);
-              },
-              itemBuilder: (_) => AccountColor.values
-                  .map((c) => PopupMenuItem(
-                        value: c,
-                        child: Row(
-                          children: [
-                            Icon(Icons.circle, size: 14, color: c.color),
-                            const SizedBox(width: 8),
-                            Text(c.label, style: Typo.body),
-                          ],
-                        ),
-                      ))
-                  .toList(),
-            ),
-
-            // Edit label
-            IconButton(
-              icon: Icon(
-                Icons.edit,
-                size: 16,
-                color: c.textTertiary,
-              ),
-              onPressed: () => _showRenameDialog(account, auth),
-            ),
-          ],
+  // -- System Section: label divider + card-wrapped content --
+  Widget _systemSection({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SectionDivider(label: title),
         ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: VoidColors.bgCard,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Column(children: children),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // -- Account Row --
+  Widget _buildAccountRow(UserAccount account, AuthService auth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Color dot
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: account.colorTag.color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 14),
+              InitialsAvatar(name: account.displayName, size: 40),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(account.label, style: Typo.body),
+                        ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () => _showRenameDialog(account, auth),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 11,
+                            color: VoidColors.textTertiary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      account.email,
+                      style: Typo.mono.copyWith(color: VoidColors.textTertiary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (account.isPrimary)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: VoidColors.bgCardHover,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'PRIMARY',
+                    style: Typo.mono.copyWith(
+                      fontSize: 14,
+                      color: VoidColors.textPrimary,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Color picker row
+          Padding(
+            padding: const EdgeInsets.only(left: 26),
+            child: Row(
+              children: [
+                Text(
+                  'COLOR',
+                  style: Typo.mono.copyWith(
+                    fontSize: 14,
+                    color: VoidColors.textTertiary,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const Spacer(),
+                ...AccountColor.values.map((c) => Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: GestureDetector(
+                        onTap: () => auth.setAccountColor(account.email, c),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: c.color,
+                            shape: BoxShape.circle,
+                            border: account.colorTag == c
+                                ? Border.all(color: VoidColors.textPrimary, width: 2)
+                                : null,
+                          ),
+                        ),
+                      ),
+                    )),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   void _showRenameDialog(UserAccount account, AuthService auth) {
-    final c = context.voidColors;
     final controller = TextEditingController(text: account.label);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: c.bgCard,
+        backgroundColor: VoidColors.bgCard,
         title: Text('Rename Account', style: Typo.headline),
         content: TextField(
           controller: controller,
           style: Typo.body,
           decoration: InputDecoration(
             hintText: 'Account name',
-            hintStyle: Typo.body.copyWith(color: c.textTertiary),
+            hintStyle: Typo.body.copyWith(color: VoidColors.textTertiary),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Cancel',
-                style: Typo.body.copyWith(color: c.textSecondary)),
+                style: Typo.body.copyWith(color: VoidColors.textSecondary)),
           ),
           TextButton(
             onPressed: () {
@@ -249,160 +341,106 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   Widget _buildAddAccountButton(AuthService auth) {
-    final c = context.voidColors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: GestureDetector(
-        onTap: () => auth.signInWithGoogle(),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: c.bgCard,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: c.border,
-              width: 0.5,
-              strokeAlign: BorderSide.strokeAlignInside,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.add,
-                size: 18,
-                color: VoidColors.accentGreen,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Add Account',
-                style: Typo.body.copyWith(
-                  color: VoidColors.accentGreen,
-                ),
-              ),
-            ],
-          ),
+    return GestureDetector(
+      onTap: () => auth.signInWithGoogle(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            const Icon(Icons.add, size: 14, color: VoidColors.textPrimary),
+            const SizedBox(width: 10),
+            Text('Add Account', style: Typo.body),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSignatureEditor(UserAccount account) {
-    final c = context.voidColors;
+  // -- Signature Row (per-account, collapsible) --
+  Widget _buildSignatureRow(UserAccount account) {
     _signatureControllers.putIfAbsent(
       account.email,
-      () => TextEditingController(text: 'Best regards,\n${account.displayName}'),
+      () => TextEditingController(text: 'Sent from VoidMail'),
     );
+    final isEditing = _editingSignatureAccount == account.email;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.zero,
-        title: Text(
-          account.label,
-          style: Typo.body.copyWith(fontSize: 15),
+    return Column(
+      children: [
+        const _SectionInlineDivider(),
+        GestureDetector(
+          onTap: () => setState(() {
+            _editingSignatureAccount = isEditing ? null : account.email;
+          }),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: account.colorTag.color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    account.email,
+                    style: Typo.mono.copyWith(fontSize: 16, color: VoidColors.textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  isEditing ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  size: 16,
+                  color: VoidColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
         ),
-        iconColor: c.textTertiary,
-        collapsedIconColor: c.textTertiary,
-        children: [
-          TextField(
-            controller: _signatureControllers[account.email],
-            maxLines: 4,
-            style: Typo.body.copyWith(fontSize: 14),
-            decoration: InputDecoration(
-              hintText: 'Enter email signature...',
-              hintStyle: Typo.body.copyWith(
-                fontSize: 14,
-                color: c.textTertiary,
-              ),
-              filled: true,
-              fillColor: c.bgCard,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+        if (isEditing)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: TextField(
+              controller: _signatureControllers[account.email],
+              maxLines: 4,
+              style: Typo.subhead.copyWith(color: VoidColors.textPrimary),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: VoidColors.bgDeep,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 8),
-        ],
-      ),
+      ],
     );
   }
 
-  Widget _buildAppearancePicker() {
-    final c = context.voidColors;
-    final themeNotifier = context.watch<ThemeModeNotifier>();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        children: [
-          Icon(Icons.palette, size: 16, color: c.textSecondary),
-          const SizedBox(width: 12),
-          Text('Theme', style: Typo.body),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 3,
-            child: SegmentedButton<String>(
-            showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(value: 'dark', label: Text('Dark')),
-              ButtonSegment(value: 'light', label: Text('Light')),
-              ButtonSegment(value: 'system', label: Text('System')),
-            ],
-            selected: {themeNotifier.modeString},
-            onSelectionChanged: (val) => themeNotifier.setMode(val.first),
-            style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return c.textPrimary;
-                }
-                return c.bgCard;
-              }),
-              foregroundColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return c.textInverse;
-                }
-                return c.textSecondary;
-              }),
-              side: WidgetStateProperty.all(
-                BorderSide(color: c.border, width: 0.5),
-              ),
-            ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAboutSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: VoidCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  // -- Nav Row (icon + label + chevron) --
+  Widget _buildNavRow({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
           children: [
-            Text(
-              'VOIDMAIL',
-              style: Typo.title3.copyWith(fontSize: 20),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'by Neural Arc',
-              style: Typo.subhead.copyWith(
-                fontSize: 13,
-                color: VoidColors.accentPink,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'A dark, minimal, AI-powered email experience. Built for focus.',
-              style: Typo.subhead.copyWith(height: 1.5),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Version 1.0.0',
-              style: Typo.monoSmall,
+            Icon(icon, size: 16, color: VoidColors.textSecondary),
+            const SizedBox(width: 14),
+            Expanded(child: Text(label, style: Typo.body)),
+            const Icon(
+              Icons.chevron_right,
+              size: 13,
+              color: VoidColors.textTertiary,
             ),
           ],
         ),
@@ -410,119 +448,118 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
-  Widget _buildNavigationRow({
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final c = context.voidColors;
+  // -- Appearance Picker --
+  Widget _buildAppearancePicker() {
+    final themeNotifier = context.watch<ThemeModeNotifier>();
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.palette, size: 16, color: VoidColors.textSecondary),
+          const SizedBox(width: 12),
+          Text('Theme', style: Typo.body),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 3,
+            child: SegmentedButton<String>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(value: 'dark', label: Text('Dark')),
+                ButtonSegment(value: 'light', label: Text('Light')),
+                ButtonSegment(value: 'system', label: Text('System')),
+              ],
+              selected: {themeNotifier.modeString},
+              onSelectionChanged: (val) => themeNotifier.setMode(val.first),
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return Colors.white;
+                  }
+                  return VoidColors.bgDeep;
+                }),
+                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return VoidColors.bgDeep;
+                  }
+                  return VoidColors.textTertiary;
+                }),
+                side: WidgetStateProperty.all(
+                  const BorderSide(color: Colors.transparent, width: 0),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -- Sign Out Button --
+  Widget _buildSignOutButton(AuthService auth) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () => _showSignOutConfirm(auth),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: c.bgCard,
+            color: VoidColors.accentPink,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 16, color: color),
+          child: Center(
+            child: Text(
+              'SIGN OUT',
+              style: Typo.body.copyWith(
+                color: VoidColors.bgDeep,
+                letterSpacing: 1,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: Typo.body.copyWith(fontSize: 15)),
-                    Text(
-                      subtitle,
-                      style: Typo.subhead.copyWith(
-                        fontSize: 12,
-                        color: c.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: c.textTertiary,
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSignOutButton(AuthService auth) {
-    final c = context.voidColors;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GestureDetector(
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              backgroundColor: c.bgCard,
-              title: Text('Sign Out', style: Typo.headline),
-              content: Text(
-                'Are you sure you want to sign out of all accounts?',
-                style: Typo.subhead,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text('Cancel',
-                      style: Typo.body
-                          .copyWith(color: c.textSecondary)),
-                ),
-                TextButton(
-                  onPressed: () {
-                    auth.signOut();
-                    Navigator.pop(ctx);
-                  },
-                  child: Text('Sign Out',
-                      style:
-                          Typo.body.copyWith(color: VoidColors.accentPink)),
-                ),
-              ],
-            ),
-          );
-        },
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: VoidColors.accentPink.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: VoidColors.accentPink.withValues(alpha: 0.3),
-              width: 0.5,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              'Sign Out',
-              style: Typo.body.copyWith(
-                color: VoidColors.accentPink,
-              ),
-            ),
-          ),
+  void _showSignOutConfirm(AuthService auth) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: VoidColors.bgCard,
+        title: Text('Sign Out', style: Typo.headline),
+        content: Text(
+          'Are you sure you want to sign out of all accounts?',
+          style: Typo.subhead,
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: Typo.body.copyWith(color: VoidColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () {
+              auth.signOut();
+              Navigator.pop(ctx);
+            },
+            child: Text('Sign Out',
+                style: Typo.body.copyWith(color: VoidColors.accentPink)),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+// Thin divider used between items inside a section card
+class _SectionInlineDivider extends StatelessWidget {
+  const _SectionInlineDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(height: 0.5, color: VoidColors.border),
     );
   }
 }

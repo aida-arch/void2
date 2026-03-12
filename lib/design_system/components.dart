@@ -139,20 +139,20 @@ class SectionDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.voidColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           Text(
             label.toUpperCase(),
             style: Typo.sectionLabel,
           ),
-          const SizedBox(height: 8),
-          Container(
-            height: 0.5,
-            color: c.border,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              height: 0.5,
+              color: VoidColors.border,
+            ),
           ),
         ],
       ),
